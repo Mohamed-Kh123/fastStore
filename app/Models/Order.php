@@ -56,8 +56,10 @@ class Order extends Model
     public function setOrderStatusAttribute($value)
     {
         $details = $this->orderDetailsData();
-        $details->status = $value;
-        $details->save();
+        if($details){
+            $details->status = $value;
+            $details->save();
+        }
     }
 
     private function orderDetailsData()

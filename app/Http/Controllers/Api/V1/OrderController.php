@@ -208,7 +208,7 @@ class OrderController extends Controller
                     ], 404);
                 }
             }
-
+            $maximum_shipping_charge = 0;
             $module_wise_delivery_charge = $store->zone->modules()->where('modules.id', $request->header('moduleId'))->first();
             if ($module_wise_delivery_charge) {
                 $per_km_shipping_charge = $module_wise_delivery_charge->pivot->per_km_shipping_charge;
@@ -364,7 +364,6 @@ class OrderController extends Controller
         } else {
             $order->additional_charge = 0;
         }
-
         if ($request->order_type !== 'parcel') {
             foreach (json_decode($request['cart'], true) as $c) {
                 if ($c['item_campaign_id'] != null) {
@@ -398,7 +397,8 @@ class OrderController extends Controller
                                 'add_ons' => json_encode($addon_data['addons']),
                                 'total_add_on_price' => $addon_data['total_add_on_price'],
                                 'created_at' => now(),
-                                'updated_at' => now()
+                                'updated_at' => now(),
+                                "status" => 'pending'
                             ];
                             $order_details[] = $or_d;
                             $total_addon_price += $or_d['total_add_on_price'];
@@ -446,7 +446,8 @@ class OrderController extends Controller
                                 'add_ons' => json_encode($addon_data['addons']),
                                 'total_add_on_price' => $addon_data['total_add_on_price'],
                                 'created_at' => now(),
-                                'updated_at' => now()
+                                'updated_at' => now(),
+                                'status' => 'pending',
                             ];
                             $order_details[] = $or_d;
                             $total_addon_price += $or_d['total_add_on_price'];
@@ -503,7 +504,8 @@ class OrderController extends Controller
                                 'add_ons' => json_encode($addon_data['addons']),
                                 'total_add_on_price' => round($addon_data['total_add_on_price'], config('round_up_to_digit')),
                                 'created_at' => now(),
-                                'updated_at' => now()
+                                'updated_at' => now(),
+                                'status' => 'pending',
                             ];
                             $total_addon_price += $or_d['total_add_on_price'];
                             $product_price += $price * $or_d['quantity'];
@@ -553,7 +555,9 @@ class OrderController extends Controller
                                 'add_ons' => json_encode($addon_data['addons']),
                                 'total_add_on_price' => round($addon_data['total_add_on_price'], config('round_up_to_digit')),
                                 'created_at' => now(),
-                                'updated_at' => now()
+                                'updated_at' => now(),
+                                'status' => 'pending',
+
                             ];
                             $total_addon_price += $or_d['total_add_on_price'];
                             $product_price += $price * $or_d['quantity'];
