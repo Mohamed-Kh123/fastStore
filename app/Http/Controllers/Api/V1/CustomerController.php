@@ -17,16 +17,17 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Zone;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Illuminate\Validation\Rules\Password;
+
 class CustomerController extends Controller
 {
     public function address_list(Request $request)
     {
-        $limit = $request['limit']??10;
-        $offset = $request['offset']??1;
+        $limit = $request['limit'] ?? 10;
+        $offset = $request['offset'] ?? 1;
 
-        $addresses = CustomerAddress::where('user_id', $request->user()->id)->latest()->paginate($limit, ['*'], 'page', $offset);
+        $addresses = CustomerAddress::where('user_id', auth()->id())->latest()->paginate($limit, ['*'], 'page', $offset);
 
-        $data =  [
+        $data = [
             'total_size' => $addresses->total(),
             'limit' => $limit,
             'offset' => $offset,
@@ -51,8 +52,7 @@ class CustomerController extends Controller
         }
 
         $zone = Zone::whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->get(['id']);
-        if(count($zone) == 0)
-        {
+        if (count($zone) == 0) {
             $errors = [];
             array_push($errors, ['code' => 'coordinates', 'message' => translate('messages.service_not_available_in_this_area')]);
             return response()->json([
@@ -76,10 +76,10 @@ class CustomerController extends Controller
             'updated_at' => now()
         ];
         DB::table('customer_addresses')->insert($address);
-        return response()->json(['message' => translate('messages.successfully_added'),'zone_ids'=>array_column($zone->toArray(), 'id')], 200);
+        return response()->json(['message' => translate('messages.successfully_added'), 'zone_ids' => array_column($zone->toArray(), 'id')], 200);
     }
 
-    public function update_address(Request $request,$id)
+    public function update_address(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'contact_person_name' => 'required',
@@ -94,8 +94,7 @@ class CustomerController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $zone = Zone::whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->get(['id']);
-        if(!$zone)
-        {
+        if (!$zone) {
             $errors = [];
             array_push($errors, ['code' => 'coordinates', 'message' => translate('messages.service_not_available_in_this_area')]);
             return response()->json([
@@ -117,8 +116,8 @@ class CustomerController extends Controller
             'created_at' => now(),
             'updated_at' => now()
         ];
-        DB::table('customer_addresses')->where('id',$id)->update($address);
-        return response()->json(['message' => translate('messages.updated_successfully'),'zone_id'=>$zone[0]->id], 200);
+        DB::table('customer_addresses')->where('id', $id)->update($address);
+        return response()->json(['message' => translate('messages.updated_successfully'), 'zone_id' => $zone[0]->id], 200);
     }
 
     public function delete_address(Request $request)
@@ -173,16 +172,16 @@ class CustomerController extends Controller
             ], 200);
         }
 
-    // Current Language
-    $current_language = $request->header('X-localization');
-    $user = User::findOrFail($request->user()->id);
-    $user->current_language_key = $current_language;
-    $user->save();
-    
+        // Current Language
+        $current_language = $request->header('X-localization');
+        $user = User::findOrFail($request->user()->id);
+        $user->current_language_key = $current_language;
+        $user->save();
+
         $data = $request->user();
         $data['userinfo'] = $data->userinfo;
-        $data['order_count'] =(integer)$request->user()->orders->count();
-        $data['member_since_days'] =(integer)$request->user()->created_at->diffInDays();
+        $data['order_count'] = (integer)$request->user()->orders->count();
+        $data['member_since_days'] = (integer)$request->user()->created_at->diffInDays();
         unset($data['orders']);
         return response()->json($data, 200);
     }
@@ -192,7 +191,7 @@ class CustomerController extends Controller
         $validator = Validator::make($request->all(), [
             'f_name' => 'required',
             'l_name' => 'required',
-            'email' => 'required|unique:users,email,'.$request->user()->id,
+            'email' => 'required|unique:users,email,' . $request->user()->id,
             'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
         ], [
             'f_name.required' => 'First name is required!',
@@ -225,7 +224,7 @@ class CustomerController extends Controller
         $user->password = $pass;
         $user->save();
 
-        if($user->userinfo) {
+        if ($user->userinfo) {
             $userinfo = $user->userinfo;
             $userinfo->f_name = $request->f_name;
             $userinfo->l_name = $request->l_name;
@@ -236,6 +235,7 @@ class CustomerController extends Controller
 
         return response()->json(['message' => translate('messages.successfully_updated')], 200);
     }
+
     public function update_interest(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -265,8 +265,8 @@ class CustomerController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        DB::table('users')->where('id',$request->user()->id)->update([
-            'cm_firebase_token'=>$request['cm_firebase_token']
+        DB::table('users')->where('id', $request->user()->id)->update([
+            'cm_firebase_token' => $request['cm_firebase_token']
         ]);
 
         return response()->json(['message' => translate('messages.updated_successfully')], 200);
@@ -283,31 +283,31 @@ class CustomerController extends Controller
         }
 
 
-        $zone_id= $request->header('zoneId');
+        $zone_id = $request->header('zoneId');
 
         $interest = $request->user()->interest;
-        $interest = isset($interest) ? json_decode($interest):null;
+        $interest = isset($interest) ? json_decode($interest) : null;
         // return response()->json($interest, 200);
 
-        $products =  Item::active()->whereHas('store', function($q)use($zone_id){
+        $products = Item::active()->whereHas('store', function ($q) use ($zone_id) {
             $q->whereIn('zone_id', json_decode($zone_id, true));
         })
-        ->when(isset($interest), function($q)use($interest){
-            return $q->whereIn('category_id',$interest);
-        })
-        ->whereHas('module.zones', function($query)use($zone_id){
-            $query->whereIn('zones.id', json_decode($zone_id, true));
-        })
-        ->whereHas('store', function($query)use($zone_id){
-            $query->when(config('module.current_module_data'), function($query){
-                $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
-                    $query->where('modules.id', config('module.current_module_data')['id']);
-                });
-            })->whereIn('zone_id', json_decode($zone_id, true));
-        })
-        ->when($interest == null, function($q){
-            return $q->popular();
-        })->limit(5)->get();
+            ->when(isset($interest), function ($q) use ($interest) {
+                return $q->whereIn('category_id', $interest);
+            })
+            ->whereHas('module.zones', function ($query) use ($zone_id) {
+                $query->whereIn('zones.id', json_decode($zone_id, true));
+            })
+            ->whereHas('store', function ($query) use ($zone_id) {
+                $query->when(config('module.current_module_data'), function ($query) {
+                    $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules', function ($query) {
+                        $query->where('modules.id', config('module.current_module_data')['id']);
+                    });
+                })->whereIn('zone_id', json_decode($zone_id, true));
+            })
+            ->when($interest == null, function ($q) {
+                return $q->popular();
+            })->limit(5)->get();
         $products = Helpers::product_data_formatting($products, true, false, app()->getLocale());
         return response()->json($products, 200);
     }
@@ -332,12 +332,11 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        if(Order::where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count())
-        {
-            return response()->json(['errors'=>[['code'=>'on-going', 'message'=>translate('messages.user_account_delete_warning')]]],203);
+        if (Order::where('user_id', $user->id)->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
+            return response()->json(['errors' => [['code' => 'on-going', 'message' => translate('messages.user_account_delete_warning')]]], 203);
         }
         $request->user()->token()->revoke();
-        if($user->userinfo){
+        if ($user->userinfo) {
             $user->userinfo->delete();
         }
         $user->delete();
