@@ -687,7 +687,6 @@ class Helpers
         foreach ($data as $item) {
             $item['add_ons'] = json_decode($item['add_ons']);
             $item['variation'] = json_decode($item['variation'], true);
-            $item['item_details'] = json_decode($item['item_details'], true);
             $item['store_id'] = $item['item_details'] ? $item['item_details']['store_id'] : null;
             $store = Store::find($item['store_id']);
             if($store){
