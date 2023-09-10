@@ -1187,12 +1187,14 @@ class OrderController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-
-        $order = Order::with('details', 'parcel_category')->where('user_id', $request->user()->id)->find($request->order_id);
+        $order = Order::with('details', 'parcel_category')
+            ->where('user_id', auth()->id())
+            ->where('id', $request->order_id)
+            ->first();
 
         $details = isset($order->details) ? $order->details : null;
         if ($details != null && $details->count() > 0) {
-            $details = Helpers::order_details_data_formatting($details);
+//            $details = Helpers::order_details_data_formatting($details);
             // $details['store'] = $order['store'] ? Helpers::store_data_formatting($order['store']) : $order['store'];
             // $details['delivery_man'] = $order['delivery_man'] ? Helpers::deliverymen_data_formatting([$order['delivery_man']]) : $order['delivery_man'];
             return response()->json($details, 200);
