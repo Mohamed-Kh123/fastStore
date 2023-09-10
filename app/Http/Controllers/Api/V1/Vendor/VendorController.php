@@ -156,7 +156,7 @@ class VendorController extends Controller
 //            ->NotDigitalOrder()
 //            ->orderBy('schedule_at', 'desc')
 //            ->get();
-//        $orders = Helpers::order_data_formatting($orders, true);
+        $orders = Helpers::order_details_data_formatting($orders, true);
         return response()->json($orders, 200);
     }
 
