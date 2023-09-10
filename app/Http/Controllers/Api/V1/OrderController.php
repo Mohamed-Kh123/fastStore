@@ -79,7 +79,6 @@ class OrderController extends Controller
             'charge_payer' => 'required_if:order_type,parcel|in:sender,receiver',
             'dm_tips' => 'nullable|numeric'
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
@@ -382,7 +381,6 @@ class OrderController extends Controller
                             $product->tax = $store->tax;
                             $product = Helpers::product_data_formatting($product, false, false, app()->getLocale());
                             $addon_data = Helpers::calculate_addon_price(\App\Models\AddOn::whereIn('id', $c['add_on_ids'])->get(), $c['add_on_qtys']);
-
                             $or_d = [
                                 'item_id' => null,
                                 'item_campaign_id' => $c['item_campaign_id'],
@@ -398,7 +396,8 @@ class OrderController extends Controller
                                 'total_add_on_price' => $addon_data['total_add_on_price'],
                                 'created_at' => now(),
                                 'updated_at' => now(),
-                                "status" => 'pending'
+                                "status" => 'pending',
+                                'store_id' => $product->store_id,
                             ];
                             $order_details[] = $or_d;
                             $total_addon_price += $or_d['total_add_on_price'];
@@ -448,6 +447,7 @@ class OrderController extends Controller
                                 'created_at' => now(),
                                 'updated_at' => now(),
                                 'status' => 'pending',
+                                'store_id' => $product->store_id,
                             ];
                             $order_details[] = $or_d;
                             $total_addon_price += $or_d['total_add_on_price'];
@@ -506,6 +506,7 @@ class OrderController extends Controller
                                 'created_at' => now(),
                                 'updated_at' => now(),
                                 'status' => 'pending',
+                                'store_id' => $product->store_id,
                             ];
                             $total_addon_price += $or_d['total_add_on_price'];
                             $product_price += $price * $or_d['quantity'];
@@ -557,7 +558,7 @@ class OrderController extends Controller
                                 'created_at' => now(),
                                 'updated_at' => now(),
                                 'status' => 'pending',
-
+                                'store_id' => $product->store_id,
                             ];
                             $total_addon_price += $or_d['total_add_on_price'];
                             $product_price += $price * $or_d['quantity'];
@@ -756,6 +757,7 @@ class OrderController extends Controller
 
     public function prescription_place_order(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'store_id' => 'required_unless:order_type,parcel',
             'order_attachment' => 'required',
@@ -1005,7 +1007,6 @@ class OrderController extends Controller
         $order->prescription_order = 1;
         $order->created_at = now();
         $order->updated_at = now();
-
         //Added service charge
         $additional_charge_status = BusinessSetting::where('key', 'additional_charge_status')->first()->value;
         $additional_charge = BusinessSetting::where('key', 'additional_charge')->first()->value;

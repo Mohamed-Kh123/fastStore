@@ -2819,4 +2819,5 @@
   'Discount' => 'Discount',
   'items_bulk_export' => 'Items bulk export',
   'Food Bulk Export' => 'Food Bulk Export',
+  'product_out_of_stock_warning' => 'Product out of stock warning',
 );
