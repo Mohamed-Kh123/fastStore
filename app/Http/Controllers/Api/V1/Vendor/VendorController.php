@@ -149,7 +149,6 @@ class VendorController extends Controller
                 }
             })
          */
-//        $orders = OrderDetail::where('store_id', $vendor->stores[0]->id)->get();
         $orders = Order::whereHas('store.vendor', function ($query) use ($vendor) {
             $query->where('id', $vendor->id);
         })
@@ -157,7 +156,8 @@ class VendorController extends Controller
             ->Notpos()
             ->NotDigitalOrder()
             ->orderBy('schedule_at', 'desc')
-            ->get()->append('order_details_data');
+            ->get()
+            ->append('order_details_data');
         $orders = Helpers::order_data_formatting($orders, true);
         return response()->json($orders, 200);
     }
@@ -167,37 +167,26 @@ class VendorController extends Controller
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
             'offset' => 'required',
-//            'status' => 'required|in:all,refunded,delivered',
+            'status' => 'required|in:all,refunded,delivered',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
         $vendor = $request['vendor'];
 
-        $paginator = Order::whereHas('store.vendor', function ($query) use ($vendor) {
+        $orders = Order::whereHas('store.vendor', function ($query) use ($vendor) {
             $query->where('id', $vendor->id);
         })
             ->with('customer')
-            ->when($request->status == 'all', function ($query) {
-                return $query->whereIn('order_status', ['refunded', 'delivered']);
-            })
-            ->when($request->status != 'all', function ($query) use ($request) {
-                return $query->where('order_status', $request->status);
-            })
             ->Notpos()
-            ->latest()
-            ->paginate($request['limit'], ['*'], 'page', $request['offset'])();
-//        dd($paginator);
-        $orders = Helpers::order_data_formatting($paginator->items(), true);
-        $data = [
-            'total_size' => $paginator->total(),
-            'limit' => $request['limit'],
-            'offset' => $request['offset'],
-            'orders' => $orders
-        ];
-        return response()->json($data, 200);
+            ->NotDigitalOrder()
+            ->orderBy('schedule_at', 'desc')
+            ->get()
+            ->append('order_details_data')
+
+        $orders = Helpers::order_data_formatting($orders, true);
+        return response()->json($orders, 200);
     }
 
     public function get_canceled_orders(Request $request)
@@ -249,11 +238,11 @@ class VendorController extends Controller
         }
 
         $vendor = $request['vendor'];
-/*
- * whereHas('store.vendor', function ($query) use ($vendor) {
-            $query->where('id', $vendor->id);
-        })->
- */
+        /*
+         * whereHas('store.vendor', function ($query) use ($vendor) {
+                    $query->where('id', $vendor->id);
+                })->
+         */
         $order = Order::where('id', $request['order_id'])
             ->Notpos()
             ->first();
