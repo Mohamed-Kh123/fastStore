@@ -131,32 +131,34 @@ class VendorController extends Controller
     public function get_current_orders(Request $request)
     {
         $vendor = $request['vendor'];
-        $orders = OrderDetail::where('store_id', $vendor->stores[0]->id)->get();
-//        $orders = Order::whereHas('store.vendor', function ($query) use ($vendor) {
-//            $query->where('id', $vendor->id);
-//        })
-//            ->with('customer')
-//            ->where(function ($query) use ($vendor) {
-//                if (config('order_confirmation_model') == 'store' || $vendor->stores[0]->self_delivery_system) {
-//                    $query->whereIn('order_status', ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
-//                } else {
-//                    $query->whereIn('order_status', ['confirmed', 'processing', 'handover', 'picked_up'])
-//                        ->orWhere(function ($query) {
-//                            $query->whereNotNull('confirmed')->where('order_status', 'accepted');
-//                        })
-//                        ->orWhere(function ($query) {
-//                            $query->where('payment_status', 'paid')->where('order_status', 'accepted');
-//                        })
-//                        ->orWhere(function ($query) {
-//                            $query->where('order_status', 'pending')->where('order_type', 'take_away');
-//                        });
-//                }
-//            })
-//            ->Notpos()
-//            ->NotDigitalOrder()
-//            ->orderBy('schedule_at', 'desc')
-//            ->get();
-        $orders = Helpers::order_details_data_formatting($orders, true);
+        /*
+         *         ->where(function ($query) use ($vendor) {
+                if (config('order_confirmation_model') == 'store' || $vendor->stores[0]->self_delivery_system) {
+                    $query->whereIn('order_status', ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
+                } else {
+                    $query->whereIn('order_status', ['confirmed', 'processing', 'handover', 'picked_up'])
+                        ->orWhere(function ($query) {
+                            $query->whereNotNull('confirmed')->where('order_status', 'accepted');
+                        })
+                        ->orWhere(function ($query) {
+                            $query->where('payment_status', 'paid')->where('order_status', 'accepted');
+                        })
+                        ->orWhere(function ($query) {
+                            $query->where('order_status', 'pending')->where('order_type', 'take_away');
+                        });
+                }
+            })
+         */
+//        $orders = OrderDetail::where('store_id', $vendor->stores[0]->id)->get();
+        $orders = Order::whereHas('store.vendor', function ($query) use ($vendor) {
+            $query->where('id', $vendor->id);
+        })
+            ->with('customer')
+            ->Notpos()
+            ->NotDigitalOrder()
+            ->orderBy('schedule_at', 'desc')
+            ->get()->append('order_details_data');
+        $orders = Helpers::order_data_formatting($orders, true);
         return response()->json($orders, 200);
     }
 

@@ -56,11 +56,17 @@ class Order extends Model
     public function setOrderStatusAttribute($value)
     {
         $details = $this->orderDetailsData();
-        if($details){
+        if ($details) {
             $details->status = $value;
             $details->save();
         }
     }
+
+    public function getOrderDetailsDataAttribute()
+    {
+        return $this->orderDetailsData();
+    }
+
 
     private function orderDetailsData()
     {
@@ -69,7 +75,7 @@ class Order extends Model
             if (isset(request()['vendor'])) {
                 $query->where('vendor_id', Arr::get(request(), 'vendor.id'));
             } elseif (isset($dm)) {
-                $query->where('id',$dm->store_id);
+                $query->where('id', $dm->store_id);
             }
 
         })->first();
