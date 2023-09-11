@@ -230,6 +230,7 @@ class VendorController extends Controller
 
     public function update_order_status(Request $request)
     {
+        
         $validator = Validator::make($request->all(), [
             'order_id' => 'required',
             'reason' => 'required_if:status,canceled',
