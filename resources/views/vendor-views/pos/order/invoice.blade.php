@@ -102,7 +102,7 @@
                             @php($total_dis_on_pro = 0)
                             @php($add_ons_cost = 0)
                             @foreach ($order->details as $detail)
-                                @php($item = json_decode($detail->item_details, true))
+                                @php($item = $detail->item_details)
                                 <tr>
                                     <td class="text-break">
                                         {{ $item['name'] }} <br>
