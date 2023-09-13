@@ -337,7 +337,7 @@
                                 <tbody>
                                 @foreach ($order->details as $key => $detail)
                                     @if (isset($detail->item_id))
-                                        @php($detail->item = json_decode($detail->item_details, true))
+                                        @php($detail->item = $detail->item_details)
                                         <!-- Media -->
                                         <tr>
                                             <td>
@@ -448,7 +448,7 @@
                                         @php($store_discount_amount += $detail['discount_on_item'] * $detail['quantity'])
                                         <!-- End Media -->
                                     @elseif(isset($detail->item_campaign_id))
-                                        @php($detail->campaign = json_decode($detail->item_details, true))
+                                        @php($detail->campaign = $detail->item_details)
                                         <!-- Media -->
                                         <tr>
                                             <td>

@@ -502,7 +502,7 @@
                                             @if (isset($detail->item_id) && $detail->status)
                                                 <?php
                                                 if (!$editing) {
-                                                    $detail->item = json_decode($detail->item_details, true);
+                                                    $detail->item = $detail->item_details;
                                                 }
                                                 ?>
 
@@ -639,7 +639,7 @@
                                             @elseif(isset($detail->item_campaign_id) && $detail->status)
                                                 <?php
                                                 if (!$editing) {
-                                                    $detail->campaign = json_decode($detail->item_details, true);
+                                                    $detail->campaign = $detail->item_details;
                                                 }
                                                 ?>
                                                 <tr>
@@ -898,7 +898,7 @@
                                     </dd>
                                     <dt class="col-6">{{ translate('messages.due_amount') }}:</dt>
                                     @if ($order['payment_method'] == 'partial_payment')
-                                        
+
                                     <dd class="col-6">
                                             {{ \App\CentralLogics\Helpers::format_currency($order->order_amount-$partially_paid_amount) }}
                                     </dd>
@@ -2560,7 +2560,7 @@
         $(function() {
             $("#coba").spartanMultiImagePicker({
                 fieldName: 'order_proof[]',
-                maxCount: 
+                maxCount:
                 6-{{ $order->order_proof && $order->order_proof !== "null" ?count(json_decode($order->order_proof)):0 }},
                 rowHeight: '100px !important',
                 groupClassName: 'spartan_item_wrapper min-w-100px max-w-100px',
