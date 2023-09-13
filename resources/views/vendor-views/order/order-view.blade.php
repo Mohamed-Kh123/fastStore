@@ -10,8 +10,8 @@
 {{-- {{ dd(count(json_decode($order->order_proof))) }} --}}
 @section('content')
     <?php
-    $reasons=\App\Models\OrderCancelReason::where('status', 1)->where('user_type' ,'store' )->get();
-    $tax_included =0;
+    $reasons = \App\Models\OrderCancelReason::where('status', 1)->where('user_type', 'store')->get();
+    $tax_included = 0;
     if (count($order->details) > 0) {
         $campaign_order = $order->details[0]->campaign ? true : false;
     }
@@ -314,7 +314,7 @@
 
                         if ($order->prescription_order == 1) {
                             $product_price = $order['order_amount'] - $order['delivery_charge'] - $order['total_tax_amount'] - $order['dm_tips'] + $order['store_discount_amount'];
-                            if($order->tax_status == 'included'){
+                            if ($order->tax_status == 'included') {
                                 $product_price += $order['total_tax_amount'];
                             }
                         }
@@ -535,10 +535,10 @@
                         $total_price = $product_price + $total_addon_price - $store_discount_amount - $coupon_discount_amount;
 
                         $total_tax_amount = $order['total_tax_amount'];
-                        if($order->tax_status == 'included'){
-                                $total_tax_amount=0;
-                            }
-                        $tax_included = \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first() ?  \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first()->value : 0;
+                        if ($order->tax_status == 'included') {
+                            $total_tax_amount = 0;
+                        }
+                        $tax_included = \App\Models\BusinessSetting::where(['key' => 'tax_included'])->first() ? \App\Models\BusinessSetting::where(['key' => 'tax_included'])->first()->value : 0;
 
                         $store_discount_amount = $order['store_discount_amount'];
 
@@ -1298,7 +1298,7 @@
         $(function () {
             $("#coba").spartanMultiImagePicker({
                 fieldName: 'order_proof[]',
-                maxCount: 6 - {{ $order->order_proof !== "null" && $or->order_proof ? count(json_decode($order->order_proof)):0}},
+                maxCount: 6 - {{ $order->order_proof !== "null" && $order->order_proof ? count(json_decode($order->order_proof)):0}},
                 rowHeight: '100px !important',
                 groupClassName: 'spartan_item_wrapper min-w-100px max-w-100px',
                 maxFileSize: '',
