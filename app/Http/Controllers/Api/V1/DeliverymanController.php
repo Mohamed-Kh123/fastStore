@@ -506,7 +506,10 @@ class DeliverymanController extends Controller
         }
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
-        $order = Order::with(['customer', 'store', 'details', 'parcel_category', 'payments'])->where(['delivery_man_id' => $dm['id'], 'id' => $request['order_id']])->Notpos()->first();
+        $order = Order::with(['customer', 'store', 'details', 'parcel_category', 'payments'])
+            ->where(['delivery_man_id' => $dm['id'], 'id' => $request['order_id']])
+            ->Notpos()
+            ->first();
         if (!$order) {
             return response()->json([
                 'errors' => [

@@ -50,7 +50,7 @@ class Order extends Model
 
     public function getOrderStatusAttribute()
     {
-        return Arr::get($this->orderDetailsData(), 'status');
+        return $this->orderDetailsData() ? Arr::get($this->orderDetailsData(), 'status') : "";
     }
 
     public function setOrderStatusAttribute($value)
