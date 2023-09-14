@@ -469,7 +469,6 @@ class DeliverymanController extends Controller
         $details = OrderDetail::where('order_id', $order->id)
             ->get();
 
-        dd($details, $order, $dm);
         if (!$details) {
             return response()->json(['errors' => [['code' => 'order_id', 'message' => trans('messages.order_data_not_found')]]], 404);
         }
