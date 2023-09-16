@@ -31,29 +31,29 @@ class OrderController extends Controller
             return $query->SearchingForDeliveryman();
         })
         ->when($status == 'confirmed', function($query){
-            return $query->whereIn('order_status',['confirmed', 'accepted'])->whereNotNull('confirmed');
+            return $query->statusSearch(['confirmed', 'accepted'])->whereNotNull('confirmed');
         })
         ->when($status == 'pending', function($query){
             if(config('order_confirmation_model') == 'store' || Helpers::get_store_data()->self_delivery_system)
             {
-                return $query->where('order_status','pending');
+                return $query->statusSearch('pending');
             }
             else
             {
-                return $query->where('order_status','pending')->where('order_type', 'take_away');
+                return $query->statusSearch('pending')->where('order_type', 'take_away');
             }
         })
         ->when($status == 'cooking', function($query){
-            return $query->where('order_status','processing');
+            return $query->statusSearch('processing');
         })
         ->when($status == 'item_on_the_way', function($query){
-            return $query->where('order_status','picked_up');
+            return $query->statusSearch('picked_up');
         })
         ->when($status == 'delivered', function($query){
             return $query->Delivered();
         })
         ->when($status == 'ready_for_delivery', function($query){
-            return $query->where('order_status','handover');
+            return $query->statusSearch('handover');
         })
         ->when($status == 'refund_requested', function($query){
             return $query->RefundRequest();
@@ -70,7 +70,7 @@ class OrderController extends Controller
                 else
                 {
                     $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-                        $query->where('order_status','pending')->where('order_type', 'take_away');
+                        $query->statusSearch('pending')->where('order_type', 'take_away');
                     });
                 }
 
@@ -80,7 +80,7 @@ class OrderController extends Controller
             return $query->where(function($query){
                 $query->whereNotIn('order_status',(config('order_confirmation_model') == 'store'|| Helpers::get_store_data()->self_delivery_system)?['failed','canceled', 'refund_requested', 'refunded']:['pending','failed','canceled', 'refund_requested', 'refunded'])
                 ->orWhere(function($query){
-                    return $query->where('order_status','pending')->where('order_type', 'take_away');
+                    return $query->statusSearch('pending')->where('order_type', 'take_away');
                 });
             });
         })
@@ -114,29 +114,29 @@ class OrderController extends Controller
             return $query->SearchingForDeliveryman();
         })
         ->when($status == 'confirmed', function($query){
-            return $query->whereIn('order_status',['confirmed', 'accepted'])->whereNotNull('confirmed');
+            return $query->statusSearch(['confirmed', 'accepted'])->whereNotNull('confirmed');
         })
         ->when($status == 'pending', function($query){
             if(config('order_confirmation_model') == 'store' || Helpers::get_store_data()->self_delivery_system)
             {
-                return $query->where('order_status','pending');
+                return $query->statusSearch('pending');
             }
             else
             {
-                return $query->where('order_status','pending')->where('order_type', 'take_away');
+                return $query->statusSearch('pending')->where('order_type', 'take_away');
             }
         })
         ->when($status == 'cooking', function($query){
-            return $query->where('order_status','processing');
+            return $query->statusSearch('processing');
         })
         ->when($status == 'item_on_the_way', function($query){
-            return $query->where('order_status','picked_up');
+            return $query->statusSearch('picked_up');
         })
         ->when($status == 'delivered', function($query){
             return $query->Delivered();
         })
         ->when($status == 'ready_for_delivery', function($query){
-            return $query->where('order_status','handover');
+            return $query->statusSearch('handover');
         })
         ->when($status == 'refund_requested', function($query){
             return $query->RefundRequest();
@@ -153,7 +153,7 @@ class OrderController extends Controller
                 else
                 {
                     $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-                        $query->where('order_status','pending')->where('order_type', 'take_away');
+                        $query->statusSearch('pending')->where('order_type', 'take_away');
                     });
                 }
 
@@ -163,7 +163,7 @@ class OrderController extends Controller
             return $query->where(function($query){
                 $query->whereNotIn('order_status',(config('order_confirmation_model') == 'store'|| Helpers::get_store_data()->self_delivery_system)?['failed','canceled', 'refund_requested', 'refunded']:['pending','failed','canceled', 'refund_requested', 'refunded'])
                 ->orWhere(function($query){
-                    return $query->where('order_status','pending')->where('order_type', 'take_away');
+                    return $query->statusSearch('pending')->where('order_type', 'take_away');
                 });
             });
         })

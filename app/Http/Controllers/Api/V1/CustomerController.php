@@ -332,7 +332,7 @@ class CustomerController extends Controller
     {
         $user = $request->user();
 
-        if (Order::where('user_id', $user->id)->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
+        if (Order::where('user_id', $user->id)->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
             return response()->json(['errors' => [['code' => 'on-going', 'message' => translate('messages.user_account_delete_warning')]]], 203);
         }
         $request->user()->token()->revoke();

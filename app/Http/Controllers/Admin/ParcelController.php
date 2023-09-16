@@ -88,7 +88,7 @@ class ParcelController extends Controller
             });
         })
         ->when(isset($request->orderStatus) && $status == 'all', function($query)use($request){
-            return $query->whereIn('order_status',$request->orderStatus);
+            return $query->statusSearch($request->orderStatus);
         })
         ->when(isset($request->scheduled) && $status == 'all', function($query){
             return $query->scheduled();

@@ -32,7 +32,7 @@ class DeliveryManController extends Controller
     {
         $delivery_men = DeliveryMan::with(['rating'])
         ->withCount(['orders'=>function($query){
-            $query->where('order_status','delivered');
+            $query->statusSearch('delivered');
         }])
         ->where('store_id', $request->vendor->stores[0]->id)->latest()->get()->map(function($data){
             $data->identity_image = json_decode($data->identity_image);
@@ -79,7 +79,7 @@ class DeliveryManController extends Controller
         }
         $dm = DeliveryMan::with(['reviews.customer', 'rating'])
         ->withCount(['orders'=>function($query){
-            $query->where('order_status','delivered');
+            $query->statusSearch('delivered');
         }])
         ->where('store_id', $request->vendor->stores[0]->id)->where(['id' => $request->delivery_man_id])->first();
         $dm['avg_rating'] = (double)(!empty($dm->rating[0])?$dm->rating[0]->average:0);

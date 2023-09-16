@@ -113,7 +113,7 @@ class OrderController extends Controller
                 });
             })
             ->when(isset($request->orderStatus) && $status == 'all', function ($query) use ($request) {
-                return $query->whereIn('order_status', $request->orderStatus);
+                return $query->statusSearch( $request->orderStatus);
             })
             ->when(isset($request->order_type), function ($query) use ($request) {
                 return $query->where('order_type', $request->order_type);
@@ -1254,7 +1254,7 @@ class OrderController extends Controller
                 });
             })
             ->when(isset($request->orderStatus) && $status == 'all', function ($query) use ($request) {
-                return $query->whereIn('order_status', $request->orderStatus);
+                return $query->statusSearch( $request->orderStatus);
             })
             ->when(isset($request->scheduled) && $status == 'all', function ($query) {
                 return $query->scheduled();

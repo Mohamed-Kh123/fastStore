@@ -179,7 +179,7 @@
                                     ->when(request('module_id'), function ($query) {
                                         return $query->module(request('module_id'));
                                     })
-                                    ->whereIn('order_status', ['delivered','refund_requested','refund_request_canceled'])
+                                    ->statusSearch( ['delivered','refund_requested','refund_request_canceled'])
                                     ->when(isset($store), function ($query) use ($store) {
                                         return $query->where('store_id', $store->id);
                                     })
@@ -239,7 +239,7 @@
                                     ->when(request('module_id'), function ($query) {
                                         return $query->module(request('module_id'));
                                     })
-                                    ->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])
+                                    ->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])
                                     ->when(isset($store), function ($query) use ($store) {
                                         return $query->where('store_id', $store->id);
                                     })

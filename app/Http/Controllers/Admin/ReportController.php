@@ -349,7 +349,7 @@ class ReportController extends Controller
                 ->notRefunded()
                 ->sum(DB::raw('admin_commission -  delivery_fee_comission'));
             // ->sum(DB::raw('(admin_commission + admin_expense) - delivery_fee_comission'));
-    
+
             $admin_earned_delivery_commission = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->when(isset($zone), function ($query) use ($zone) {
                 return $query->where('zone_id', $zone->id);
             })
@@ -479,7 +479,7 @@ class ReportController extends Controller
                     ->when(request('module_id'), function ($query) {
                         return $query->module(request('module_id'));
                     })
-                    ->whereIn('order_status', ['delivered','refund_requested','refund_request_canceled'])
+                    ->statusSearch( ['delivered','refund_requested','refund_request_canceled'])
                     ->when(isset($store), function ($query) use ($store) {
                         return $query->where('store_id', $store->id);
                     })
@@ -621,7 +621,7 @@ class ReportController extends Controller
                             return $query;
                         })
                         ->whereHas('order', function ($query) {
-                            return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                            return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                         });
                 },
             ])
@@ -649,7 +649,7 @@ class ReportController extends Controller
                             return $query;
                         })
                         ->whereHas('order', function ($query) {
-                            return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                            return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                         });
                 },
             ], 'discount_on_item')
@@ -677,7 +677,7 @@ class ReportController extends Controller
                             return $query;
                         })
                         ->whereHas('order', function ($query) {
-                            return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                            return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                         });
                 },
             ], 'price')
@@ -749,7 +749,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ])
@@ -777,7 +777,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ], 'discount_on_item')
@@ -805,7 +805,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ], 'price')
@@ -996,7 +996,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ])
@@ -1024,7 +1024,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ], 'discount_on_item')
@@ -1052,7 +1052,7 @@ class ReportController extends Controller
                         return $query;
                     })
                     ->whereHas('order', function ($query) {
-                        return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                        return $query->statusSearch( ['delivered', 'refund_requested', 'refund_request_canceled']);
                     });
             },
         ], 'price')
@@ -1307,10 +1307,10 @@ class ReportController extends Controller
             ->when(isset($filter) && $filter == 'this_week', function ($query) {
                 return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
             })->StoreOrder()->get();
-        $total_order_amount = $orders->whereIn('order_status', ['delivered'])->sum('order_amount');
-        $total_ongoing = $orders->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
-        $total_canceled = $orders->whereIn('order_status', ['failed', 'canceled'])->count();
-        $total_delivered = $orders->whereIn('order_status', ['delivered'])->count();
+        $total_order_amount = $orders->statusSearch( ['delivered'])->sum('order_amount');
+        $total_ongoing = $orders->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
+        $total_canceled = $orders->statusSearch( ['failed', 'canceled'])->count();
+        $total_delivered = $orders->statusSearch( ['delivered'])->count();
 
         $items = Item::when(isset($filter) && $filter == 'this_year', function ($query) {
             return $query->whereYear('created_at', now()->format('Y'));
@@ -1938,12 +1938,12 @@ class ReportController extends Controller
         $total_coupon_discount = $orders_list->sum('coupon_discount_amount');
         $total_product_discount = $orders_list->sum('store_discount_amount');
 
-        $total_ongoing = $orders_list->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->sum('order_amount');
-        $total_canceled = $orders_list->whereIn('order_status', ['failed', 'canceled'])->sum('order_amount');
-        $total_delivered = $orders_list->where('order_status', 'delivered')->sum('order_amount');
-        $total_ongoing_count = $orders_list->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
-        $total_canceled_count = $orders_list->whereIn('order_status', ['failed', 'canceled'])->count();
-        $total_delivered_count = $orders_list->where('order_status', 'delivered')->count();
+        $total_ongoing = $orders_list->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->sum('order_amount');
+        $total_canceled = $orders_list->statusSearch( ['failed', 'canceled'])->sum('order_amount');
+        $total_delivered = $orders_list->statusSearch( 'delivered')->sum('order_amount');
+        $total_ongoing_count = $orders_list->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
+        $total_canceled_count = $orders_list->statusSearch( ['failed', 'canceled'])->count();
+        $total_delivered_count = $orders_list->statusSearch( 'delivered')->count();
 
         // payment type statistics
         $order_payment_methods = Order::when(isset($zone), function ($query) use ($zone) {
@@ -2319,12 +2319,12 @@ class ReportController extends Controller
         $total_coupon_discount = $orders_list->sum('coupon_discount_amount');
         $total_product_discount = $orders_list->sum('store_discount_amount');
 
-        $total_ongoing = $orders_list->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->sum('order_amount');
-        $total_canceled = $orders_list->whereIn('order_status', ['failed', 'canceled'])->sum('order_amount');
-        $total_delivered = $orders_list->where('order_status', 'delivered')->sum('order_amount');
-        $total_ongoing_count = $orders_list->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
-        $total_canceled_count = $orders_list->whereIn('order_status', ['failed', 'canceled'])->count();
-        $total_delivered_count = $orders_list->where('order_status', 'delivered')->count();
+        $total_ongoing = $orders_list->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->sum('order_amount');
+        $total_canceled = $orders_list->statusSearch( ['failed', 'canceled'])->sum('order_amount');
+        $total_delivered = $orders_list->statusSearch( 'delivered')->sum('order_amount');
+        $total_ongoing_count = $orders_list->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
+        $total_canceled_count = $orders_list->statusSearch( ['failed', 'canceled'])->count();
+        $total_delivered_count = $orders_list->statusSearch( 'delivered')->count();
 
 
             $data = [
@@ -2562,10 +2562,10 @@ class ReportController extends Controller
                 ->when(isset($filter) && $filter == 'this_week', function ($query) {
                     return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
                 })->StoreOrder()->get();
-            $total_order_amount = $orders->whereIn('order_status', ['delivered'])->sum('order_amount');
-            $total_ongoing = $orders->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
-            $total_canceled = $orders->whereIn('order_status', ['failed', 'canceled'])->count();
-            $total_delivered = $orders->whereIn('order_status', ['delivered'])->count();
+            $total_order_amount = $orders->statusSearch( ['delivered'])->sum('order_amount');
+            $total_ongoing = $orders->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count();
+            $total_canceled = $orders->statusSearch( ['failed', 'canceled'])->count();
+            $total_delivered = $orders->statusSearch( ['delivered'])->count();
 
             $data = [
                 'stores'=>$stores,
@@ -2840,12 +2840,12 @@ class ReportController extends Controller
         $total_coupon_discount = $orders_list->sum('coupon_discount_amount');
         $total_product_discount = $orders_list->sum('store_discount_amount');
 
-        $total_canceled_count = $orders_list->where('order_status', 'canceled')->count();
-        $total_delivered_count = $orders_list->where('order_status', 'delivered')->count();
-        $total_progress_count = $orders_list->whereIn('order_status', ['accepted', 'confirmed', 'processing', 'handover'])->count();
-        $total_failed_count = $orders_list->where('order_status', 'failed')->count();
-        $total_refunded_count = $orders_list->where('order_status', 'refunded')->count();
-        $total_on_the_way_count = $orders_list->whereIn('order_status', ['picked_up'])->count();
+        $total_canceled_count = $orders_list->statusSearch( 'canceled')->count();
+        $total_delivered_count = $orders_list->statusSearch( 'delivered')->count();
+        $total_progress_count = $orders_list->statusSearch( ['accepted', 'confirmed', 'processing', 'handover'])->count();
+        $total_failed_count = $orders_list->statusSearch( 'failed')->count();
+        $total_refunded_count = $orders_list->statusSearch( 'refunded')->count();
+        $total_on_the_way_count = $orders_list->statusSearch( ['picked_up'])->count();
         return view('admin-views.report.order-report', compact('orders', 'orders_list', 'zone', 'store', 'filter', 'customer', 'total_on_the_way_count', 'total_refunded_count', 'total_failed_count', 'total_progress_count', 'total_canceled_count', 'total_delivered_count'));
     }
 

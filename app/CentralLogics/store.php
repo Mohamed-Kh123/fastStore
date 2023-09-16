@@ -85,12 +85,12 @@ class StoreLogic
             }
 
             $category_ids = array_values(array_unique($mergedIds));
-            
+
             $store->category_ids = $category_ids;
 
             $store->discount_status = !empty($store->items->where('discount', '>', 0));
         });
-        
+
         /*$paginator->total();*/
         return [
             'total_size' => $paginator->total(),
@@ -204,7 +204,7 @@ class StoreLogic
             }
 
             $category_ids = array_values(array_unique($mergedIds));
-            
+
             $store->category_ids = $category_ids;
 
             $store->discount_status = !empty($store->items->where('discount', '>', 0));
@@ -234,7 +234,7 @@ class StoreLogic
         })
         ->Active()
         ->type($type)
-        ->whereRaw("LENGTH(rating) > 0") 
+        ->whereRaw("LENGTH(rating) > 0")
         ->paginate($limit??50, ['*'], 'page', $offset??1);
 
         return [
@@ -315,7 +315,7 @@ class StoreLogic
         })
         ->active()->orderBy('open', 'desc')->orderBy('distance')->type($type)->paginate($limit, ['*'], 'page', $offset);
 
-                
+
         $paginator->each(function ($store) {
             $category_ids = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
@@ -342,7 +342,7 @@ class StoreLogic
             }
 
             $category_ids = array_values(array_unique($mergedIds));
-            
+
             $store->category_ids = $category_ids;
             $store->discount_status = !empty($store->items->where('discount', '>', 0));
         });
@@ -495,9 +495,9 @@ class StoreLogic
         $data = [];
         foreach($stores as $key=>$store)
         {
-            $delivered = $store->orders->where('order_status', 'delivered')->count();
-            $canceled = $store->orders->where('order_status', 'canceled')->count();
-            $refunded = $store->orders->where('order_status', 'refunded')->count();
+            $delivered = $store->orders->statusSearch( 'delivered')->count();
+            $canceled = $store->orders->statusSearch( 'canceled')->count();
+            $refunded = $store->orders->statusSearch( 'refunded')->count();
             $total = $store->orders->count();
             $refund_requested = $store->orders->whereNotNull('refund_requested')->count();
             $data[]=[
@@ -505,7 +505,7 @@ class StoreLogic
                 translate('Store')=>$store->name,
                 translate('Total Order')=>$total,
                 translate('Delivered Order')=>$delivered,
-                translate('Total Amount')=>$store->orders->where('order_status','delivered')->sum('order_amount'),
+                translate('Total Amount')=>$store->orders->statusSearch('delivered')->sum('order_amount'),
                 translate('Completion Rate')=>($store->orders->count() > 0 && $delivered > 0)? number_format((100*$delivered)/$store->orders->count(), config('round_up_to_digit')): 0,
                 translate('Ongoing Rate')=>($store->orders->count() > 0 && $delivered > 0)? number_format((100*($store->orders->count()-($delivered+$canceled)))/$store->orders->count(), config('round_up_to_digit')): 0,
                 translate('Cancelation Rate')=>($store->orders->count() > 0 && $canceled > 0)? number_format((100*$canceled)/$store->orders->count(), config('round_up_to_digit')): 0,

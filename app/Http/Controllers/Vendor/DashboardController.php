@@ -57,13 +57,13 @@ class DashboardController extends Controller
 
     public function store_data()
     {
-        $new_pending_order = DB::table('orders')->where(['checked' => 0])->where('store_id', Helpers::get_store_id())->where('order_status','pending');
+        $new_pending_order = DB::table('orders')->where(['checked' => 0])->where('store_id', Helpers::get_store_id())->statusSearch('pending');
         if(config('order_confirmation_model') != 'store' && !Helpers::get_store_data()->self_delivery_system)
         {
             $new_pending_order = $new_pending_order->where('order_type', 'take_away');
         }
         $new_pending_order = $new_pending_order->count();
-        $new_confirmed_order = DB::table('orders')->where(['checked' => 0])->where('store_id', Helpers::get_store_id())->whereIn('order_status',['confirmed', 'accepted'])->whereNotNull('confirmed')->count();
+        $new_confirmed_order = DB::table('orders')->where(['checked' => 0])->where('store_id', Helpers::get_store_id())->statusSearch(['confirmed', 'accepted'])->whereNotNull('confirmed')->count();
 
         return response()->json([
             'success' => 1,
@@ -97,7 +97,7 @@ class DashboardController extends Controller
             return $query->whereDate('created_at', Carbon::today());
         })->when($this_month, function ($query) {
             return $query->whereMonth('created_at', Carbon::now());
-        })->where(['store_id' => Helpers::get_store_id()])->whereIn('order_status',['confirmed', 'accepted'])->whereNotNull('confirmed')->StoreOrder()->NotDigitalOrder()->OrderScheduledIn(30)->count();
+        })->where(['store_id' => Helpers::get_store_id()])->statusSearch(['confirmed', 'accepted'])->whereNotNull('confirmed')->StoreOrder()->NotDigitalOrder()->OrderScheduledIn(30)->count();
 
         $cooking = Order::when($today, function ($query) {
             return $query->whereDate('created_at', Carbon::today());
@@ -141,7 +141,7 @@ class DashboardController extends Controller
             else
             {
                 $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-                    $query->where('order_status','pending')->where('order_type', 'take_away');
+                    $query->statusSearch('pending')->where('order_type', 'take_away');
                 });
             }
 
@@ -155,7 +155,7 @@ class DashboardController extends Controller
         ->where(function($query){
             return $query->whereNotIn('order_status',(config('order_confirmation_model') == 'store'|| \App\CentralLogics\Helpers::get_store_data()->self_delivery_system)?['failed','canceled', 'refund_requested', 'refunded']:['pending','failed','canceled', 'refund_requested', 'refunded'])
             ->orWhere(function($query){
-                return $query->where('order_status','pending')->where('order_type', 'take_away');
+                return $query->statusSearch('pending')->where('order_type', 'take_away');
             });
         })
         ->StoreOrder()->NotDigitalOrder()->count();

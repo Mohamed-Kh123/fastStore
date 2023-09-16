@@ -284,9 +284,9 @@
                     </thead>
                     <tbody id="set-rows">
                     @foreach ($stores as $k => $store)
-                        @php($delivered = $store->orders->where('order_status', 'delivered')->count())
-                        @php($canceled = $store->orders->where('order_status', 'canceled')->count())
-                        @php($refunded = $store->orders->where('order_status', 'refunded')->count())
+                        @php($delivered = $store->orders->statusSearch( 'delivered')->count())
+                        @php($canceled = $store->orders->statusSearch( 'canceled')->count())
+                        @php($refunded = $store->orders->statusSearch( 'refunded')->count())
                         @php($refund_requested = $store->orders->whereNotNull('refund_requested')->count())
                         <tr>
                             <td>{{$k+$stores->firstItem()}}</td>
@@ -300,7 +300,7 @@
                                 {{ $delivered }}
                             </td>
                             <td class="text-center white-space-nowrap">
-                                {{\App\CentralLogics\Helpers::number_format_short($store->orders->where('order_status','delivered')->sum('order_amount'))}}
+                                {{\App\CentralLogics\Helpers::number_format_short($store->orders->statusSearch('delivered')->sum('order_amount'))}}
                             </td>
                             <td class="text-center white-space-nowrap">
                                 {{ ($store->orders->count() > 0 && $delivered > 0)? number_format((100*$delivered)/$store->orders->count(), config('round_up_to_digit')): 0 }}%

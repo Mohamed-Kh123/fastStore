@@ -75,7 +75,7 @@ class DeliveryMan extends Authenticatable
 
     public function total_delivered_orders()
     {
-        return $this->hasMany(Order::class)->where('order_status','delivered');
+        return $this->hasMany(Order::class)->statusSearch('delivered');
     }
 
     public function this_week_orders()

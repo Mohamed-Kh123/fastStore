@@ -117,7 +117,7 @@ class DeliverymanController extends Controller
     {
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
         $orders = Order::with(['customer', 'store', 'parcel_category'])
-            ->whereIn('order_status', ['accepted', 'confirmed', 'pending', 'processing', 'picked_up', 'handover'])
+            ->statusSearch( ['accepted', 'confirmed', 'pending', 'processing', 'picked_up', 'handover'])
             ->where(['delivery_man_id' => $dm['id']])
             ->orderBy('accepted')
             ->orderBy('schedule_at', 'desc')
@@ -145,10 +145,10 @@ class DeliverymanController extends Controller
         }
 
         if (config('order_confirmation_model') == 'deliveryman' && $dm->type == 'zone_wise') {
-            $orders = $orders->whereIn('order_status', ['pending', 'confirmed', 'processing', 'handover']);
+            $orders = $orders->statusSearch( ['pending', 'confirmed', 'processing', 'handover']);
         } else {
             $orders = $orders->where(function ($query) {
-                $query->whereIn('order_status', ['confirmed', 'processing', 'handover'])->orWhere('order_type', 'parcel');
+                $query->statusSearch( ['confirmed', 'processing', 'handover'])->orWhere('order_type', 'parcel');
             });
         }
         if (isset($dm->vehicle_id)) {
@@ -175,7 +175,7 @@ class DeliverymanController extends Controller
         }
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
         $order = Order::where('id', $request['order_id'])
-            // ->whereIn('order_status', ['pending', 'confirmed'])
+            // ->statusSearch( ['pending', 'confirmed'])
             ->whereNull('delivery_man_id')
             ->dmOrder()
             ->first();
@@ -274,10 +274,10 @@ class DeliverymanController extends Controller
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
         $order = Order::where(['id' => $request['order_id'], 'delivery_man_id' => $dm['id']]);
         if (config('order_confirmation_model') == 'deliveryman' && $dm->type == 'zone_wise') {
-            $order = $order->whereIn('order_status', ['pending', 'confirmed', 'processing', 'handover', 'picked_up']);
+            $order = $order->statusSearch( ['pending', 'confirmed', 'processing', 'handover', 'picked_up']);
         } else {
             $order = $order->where(function ($query) {
-                $query->whereIn('order_status', ['confirmed', 'processing', 'handover', 'picked_up'])->orWhere('order_type', 'parcel');
+                $query->statusSearch( ['confirmed', 'processing', 'handover', 'picked_up'])->orWhere('order_type', 'parcel');
             });
         }
         $order = $order->dmOrder()->first();
@@ -535,7 +535,7 @@ class DeliverymanController extends Controller
 
         $paginator = Order::with(['customer', 'store', 'parcel_category'])
             ->where(['delivery_man_id' => $dm['id']])
-            ->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refunded', 'failed'])
+            ->statusSearch( ['delivered', 'canceled', 'refund_requested', 'refunded', 'failed'])
             ->orderBy('schedule_at', 'desc')
             ->dmOrder()
             ->paginate($request['limit'], ['*'], 'page', $request['offset']);
@@ -631,7 +631,7 @@ class DeliverymanController extends Controller
     {
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
-        if (Order::where('delivery_man_id', $dm->id)->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
+        if (Order::where('delivery_man_id', $dm->id)->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
             return response()->json(['errors' => [['code' => 'on-going', 'message' => translate('messages.user_account_delete_warning')]]], 203);
         }
 

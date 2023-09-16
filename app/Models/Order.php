@@ -62,6 +62,15 @@ class Order extends Model
         }
     }
 
+    public function scopeStatusSearch($q, $params)
+    {
+        $q->with(['details' => function ($query) {
+            $query->where('status', 'pending');
+        }])->whereHas('details', function ($query) {
+            $query->where('status', 'pending');
+        });
+    }
+
     public function getOrderDetailsDataAttribute()
     {
         return $this->orderDetailsData();
@@ -71,19 +80,32 @@ class Order extends Model
     private function orderDetailsData()
     {
         $dm = DeliveryMan::where(['auth_token' => request()->get('token')])->first();
-        return $this->details()->whereHas('store', function ($query) use ($dm) {
-            if (isset(request()['vendor'])) {
-                $query->where('vendor_id', Arr::get(request(), 'vendor.id'));
-            } elseif (isset($dm)) {
-                if ($store_id = request()->get('store_id', $dm->store_id)) {
-                    if (is_array($store_id))
-                        $query->whereIn('id', $store_id);
-                    else
-                        $query->where('id', $store_id);
-                }
-            }
-
-        })->first();
+        $details = $this->details;
+        $vendorId = Arr::get(request(), 'vendor.id');
+        $store_id = request()->get('store_id', Arr::get($dm,'store_id'));
+        return collect($details)->first(function ($detail) use ($vendorId, $dm, $store_id) {
+            if ($vendorId)
+                return Arr::get($detail, 'store.vendor_id') == $vendorId;
+            elseif ($dm && $store_id) {
+                if (is_array($store_id))
+                    return in_array($detail->store_id, $store_id);
+                else
+                    return $detail->store_id == $store_id;
+            } else
+                return null;
+        });
+//        return $this->details()->whereHas('store', function ($query) use ($dm) {
+//            if (isset(request()['vendor'])) {
+//                $query->where('vendor_id', Arr::get(request(), 'vendor.id'));
+//            } elseif (isset($dm)) {
+//                if ($store_id = request()->get('store_id', $dm->store_id)) {
+//                    if (is_array($store_id))
+//                        $query->whereIn('id', $store_id);
+//                    else
+//                        $query->where('id', $store_id);
+//                }
+//            }
+//        })->first();
     }
 
 
@@ -174,12 +196,12 @@ class Order extends Model
 
     public function scopeAccepteByDeliveryman($query)
     {
-        return $query->where('order_status', 'accepted');
+        return $query->statusSearch( 'accepted');
     }
 
     public function scopePreparing($query)
     {
-        return $query->whereIn('order_status', ['confirmed', 'processing', 'handover']);
+        return $query->statusSearch( ['confirmed', 'processing', 'handover']);
     }
 
     public function scopeModule($query, $module_id)
@@ -189,32 +211,32 @@ class Order extends Model
 
     public function scopeOngoing($query)
     {
-        return $query->whereIn('order_status', ['accepted', 'confirmed', 'processing', 'handover', 'picked_up']);
+        return $query->statusSearch( ['accepted', 'confirmed', 'processing', 'handover', 'picked_up']);
     }
 
     public function scopeItemOnTheWay($query)
     {
-        return $query->where('order_status', 'picked_up');
+        return $query->statusSearch( 'picked_up');
     }
 
     public function scopePending($query)
     {
-        return $query->where('order_status', 'pending');
+        return $query->statusSearch( 'pending');
     }
 
     public function scopeFailed($query)
     {
-        return $query->where('order_status', 'failed');
+        return $query->statusSearch( 'failed');
     }
 
     public function scopeCanceled($query)
     {
-        return $query->where('order_status', 'canceled');
+        return $query->statusSearch( 'canceled');
     }
 
     public function scopeDelivered($query)
     {
-        return $query->where('order_status', 'delivered');
+        return $query->statusSearch( 'delivered');
     }
 
     public function scopeNotRefunded($query)
@@ -226,17 +248,17 @@ class Order extends Model
 
     public function scopeRefunded($query)
     {
-        return $query->where('order_status', 'refunded');
+        return $query->statusSearch( 'refunded');
     }
 
     public function scopeRefund_requested($query)
     {
-        return $query->where('order_status', 'refund_requested');
+        return $query->statusSearch( 'refund_requested');
     }
 
     public function scopeRefund_request_canceled($query)
     {
-        return $query->where('order_status', 'refund_request_canceled');
+        return $query->statusSearch( 'refund_request_canceled');
     }
 
     public function scopeSearchingForDeliveryman($query)

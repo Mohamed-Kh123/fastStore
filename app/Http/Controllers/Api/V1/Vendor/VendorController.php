@@ -138,17 +138,17 @@ class VendorController extends Controller
             ->with('customer')
             ->where(function ($query) use ($vendor) {
                 if (config('order_confirmation_model') == 'store' || $vendor->stores[0]->self_delivery_system) {
-                    $query->whereIn('order_status', ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
+                    $query->statusSearch( ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
                 } else {
-                    $query->whereIn('order_status', ['confirmed', 'processing', 'handover', 'picked_up'])
+                    $query->statusSearch( ['confirmed', 'processing', 'handover', 'picked_up'])
                         ->orWhere(function ($query) {
-                            $query->whereNotNull('confirmed')->where('order_status', 'accepted');
+                            $query->whereNotNull('confirmed')->statusSearch( 'accepted');
                         })
                         ->orWhere(function ($query) {
-                            $query->where('payment_status', 'paid')->where('order_status', 'accepted');
+                            $query->where('payment_status', 'paid')->statusSearch( 'accepted');
                         })
                         ->orWhere(function ($query) {
-                            $query->where('order_status', 'pending')->where('order_type', 'take_away');
+                            $query->statusSearch( 'pending')->where('order_type', 'take_away');
                         });
                 }
             })
@@ -179,10 +179,10 @@ class VendorController extends Controller
         })
             ->with('customer')
             ->when($request->status == 'all', function ($query) {
-                return $query->whereIn('order_status', ['refunded', 'delivered']);
+                return $query->statusSearch( ['refunded', 'delivered']);
             })
             ->when($request->status != 'all', function ($query) use ($request) {
-                return $query->where('order_status', $request->status);
+                return $query->statusSearch( $request->status);
             })
             ->Notpos()
             ->latest()
@@ -214,7 +214,7 @@ class VendorController extends Controller
             $query->where('id', $vendor->id);
         })
             ->with('customer')
-            ->where('order_status', 'canceled')
+            ->statusSearch( 'canceled')
             ->Notpos()
             ->latest()
             ->paginate($request['limit'], ['*'], 'page', $request['offset']);
@@ -694,7 +694,7 @@ class VendorController extends Controller
     {
         $vendor = $request['vendor'];
 
-        if (Order::where('store_id', $vendor->stores[0]->id)->whereIn('order_status', ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
+        if (Order::where('store_id', $vendor->stores[0]->id)->statusSearch( ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'])->count()) {
             return response()->json(['errors' => [['code' => 'on-going', 'message' => translate('messages.user_account_delete_warning')]]], 203);
         }
 
@@ -891,14 +891,14 @@ class VendorController extends Controller
             ->with('customer')
             ->where(function ($query) use ($vendor) {
                 if (config('order_confirmation_model') == 'store' || $vendor->stores[0]->self_delivery_system) {
-                    $query->whereIn('order_status', ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
+                    $query->statusSearch( ['accepted', 'pending', 'confirmed', 'processing', 'handover', 'picked_up']);
                 } else {
-                    $query->whereIn('order_status', ['confirmed', 'processing', 'handover', 'picked_up'])
+                    $query->statusSearch( ['confirmed', 'processing', 'handover', 'picked_up'])
                         ->orWhere(function ($query) {
-                            $query->where('payment_status', 'paid')->where('order_status', 'accepted');
+                            $query->where('payment_status', 'paid')->statusSearch( 'accepted');
                         })
                         ->orWhere(function ($query) {
-                            $query->where('order_status', 'pending')->where('order_type', 'take_away');
+                            $query->statusSearch( 'pending')->where('order_type', 'take_away');
                         });
                 }
             })
