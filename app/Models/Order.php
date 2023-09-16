@@ -62,7 +62,7 @@ class Order extends Model
         }
     }
 
-    public function scopeStatusSearch($q, $params)
+    public function scopeStatusSearch($q, $params, $method = null)
     {
         $dm = DeliveryMan::where(['auth_token' => request()->get('token')])->first();
         $vendorId = Arr::get(request(), 'vendor.id');
@@ -75,22 +75,26 @@ class Order extends Model
                         $query->where('status', $params);
                 }
          */
-        $q->with(['details'])->whereHas('details', function ($query) use ($params, $vendorId, $store_id) {
-            if (is_array($params))
-                $query->whereIn('status', $params);
-            else
-                $query->where('status', $params);
+        $q->with(['details'])->whereHas('details', function ($query) use ($params, $vendorId, $store_id, $method) {
+            if ($method&&$params){
+                $query->$method('status',$params);
+            }else{
+                if (is_array($params))
+                    $query->whereIn('status', $params);
+                else
+                    $query->where('status', $params);
 
-            $query->whereHas('store', function ($inner) use ($vendorId, $store_id) {
-                if ($vendorId)
-                    $inner->where('vendor_id', $vendorId);
-                elseif ($store_id) {
-                    if (is_array($store_id))
-                        $inner->whereIn('id', $store_id);
-                    else
-                        $inner->where('id', $store_id);
-                }
-            });
+                $query->whereHas('store', function ($inner) use ($vendorId, $store_id) {
+                    if ($vendorId)
+                        $inner->where('vendor_id', $vendorId);
+                    elseif ($store_id) {
+                        if (is_array($store_id))
+                            $inner->whereIn('id', $store_id);
+                        else
+                            $inner->where('id', $store_id);
+                    }
+                });
+            }
         });
         return $q;
     }
@@ -110,7 +114,7 @@ class Order extends Model
         return collect($details)->first(function ($detail) use ($vendorId, $dm, $store_id) {
             if ($vendorId)
                 return Arr::get($detail, 'store.vendor_id') == $vendorId;
-            elseif ($dm && $store_id) {
+            elseif ($store_id) {
                 if (is_array($store_id))
                     return in_array($detail->store_id, $store_id);
                 else
