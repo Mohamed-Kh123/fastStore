@@ -75,8 +75,12 @@ class Order extends Model
             if (isset(request()['vendor'])) {
                 $query->where('vendor_id', Arr::get(request(), 'vendor.id'));
             } elseif (isset($dm)) {
-                if ($store_id = request()->get('store_id', $dm->store_id))
-                    $query->where('id', $store_id);
+                if ($store_id = request()->get('store_id', $dm->store_id)) {
+                    if (is_array($store_id))
+                        $query->whereIn('id', $store_id);
+                    else
+                        $query->where('id', $store_id);
+                }
             }
 
         })->first();
