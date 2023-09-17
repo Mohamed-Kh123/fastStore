@@ -178,7 +178,7 @@ class DeliverymanController extends Controller
             // ->statusSearch( ['pending', 'confirmed'])
             ->whereNull('delivery_man_id')
             ->dmOrder()
-            ->first(); 
+            ->first();   
         if (!$order) {
             return response()->json([
                 'errors' => [
